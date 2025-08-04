@@ -231,8 +231,9 @@ data class CardReceivablesLock(
         )
         val contractInstallments: MutableList<CardReceivablesContractInstallments> = mutableListOf()
 )
+```
 
-
+```kotlin
 import jakarta.persistence.*
 import java.time.LocalDateTime
 
@@ -287,9 +288,7 @@ class CardReceivablesLockDataAccessImpl(
                 CardReceivablesContractInstallmentsRepository
 ) : CardReceivablesLockDataAccess {
 
-/
-/
-Card Receivables Lock methods
+//Card Receivables Lock methods
   override fun create(lock: CardReceivablesLock): CardReceivablesLock {
     return cardReceivablesLockRepository.save(lock)
   }
@@ -318,9 +317,7 @@ Card Receivables Lock methods
     return update(lock)
   }
 
-/
-/
-Card Receivables Holder methods
+//Card Receivables Holder methods
   override fun createHolder(holder: CardReceivablesHolder): CardReceivablesHolder {
     return cardReceivablesHolderRepository.save(holder)
   }
@@ -341,9 +338,7 @@ Card Receivables Holder methods
     return cardReceivablesHolderRepository.findByTaxId(taxId)
   }
 
-/
-/
-Card Receivables Owner Arrangement methods
+//Card Receivables Owner Arrangement methods
   override fun createOwnerArrangement(
           arrangement: CardReceivablesOwnerArrangement
   ): CardReceivablesOwnerArrangement {
@@ -356,9 +351,7 @@ Card Receivables Owner Arrangement methods
     return cardReceivablesOwnerArrangementRepository.findByCardReceivablesLockHolderId(holderId)
   }
 
-/
-/
-Card Receivables Owner Accreditor methods
+//Card Receivables Owner Accreditor methods
   override fun createOwnerAccreditor(
           accreditor: CardReceivablesOwnerAccreditor
   ): CardReceivablesOwnerAccreditor {
@@ -371,9 +364,7 @@ Card Receivables Owner Accreditor methods
     return cardReceivablesOwnerAccreditorRepository.findByCardReceivablesLockHolderId(holderId)
   }
 
-/
-/
-Card Receivables Lock Nuclea methods
+//Card Receivables Lock Nuclea methods
   override fun createNuclea(nuclea: CardReceivablesLockNuclea): CardReceivablesLockNuclea {
     return cardReceivablesLockNucleaRepository.save(nuclea)
   }
@@ -406,9 +397,7 @@ Card Receivables Lock Nuclea methods
     return updateNuclea(nuclea)
   }
 
-/
-/
-Card Receivables Lock Cerc methods
+//Card Receivables Lock Cerc methods
   override fun createCerc(cerc: CardReceivablesLockCerc): CardReceivablesLockCerc {
     return cardReceivablesLockCercRepository.save(cerc)
   }
@@ -437,9 +426,7 @@ Card Receivables Lock Cerc methods
     return updateCerc(cerc)
   }
 
-/
-/
-Card Receivables Lock Cerc Protocols methods
+//Card Receivables Lock Cerc Protocols methods
   override fun createCercProtocol(
           protocol: CardReceivablesLockCercProtocols
   ): CardReceivablesLockCercProtocols {
@@ -456,9 +443,7 @@ Card Receivables Lock Cerc Protocols methods
     return cardReceivablesLockCercProtocolsRepository.findByProtocol(protocol)
   }
 
-/
-/
-Card Receivables Contract Installments methods
+//Card Receivables Contract Installments methods
   override fun createContractInstallment(
           installment: CardReceivablesContractInstallments
   ): CardReceivablesContractInstallments {
@@ -754,3 +739,4 @@ Then
   }
 }
 ```
+
