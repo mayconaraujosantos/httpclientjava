@@ -1,122 +1,141 @@
-
-
 ```sql
--- Card Receivables Lock (Main table)
+-- Migration V1: Create card_receivables_lock tables
+-- Based on the DER diagram for receivables lock system
+
+-- Main table: card_receivables_lock
 CREATE TABLE card_receivables_lock (
-    id BIGSERIAL PRIMARY KEY,
-    hub_guarantee_id BIGINT NOT NULL,
-    contract_number VARCHAR(255) NOT NULL,
-    contract_source VARCHAR(255) NOT NULL,
-    ipoc VARCHAR(255) NOT NULL,
-    owner_person_id BIGINT,
-    amount DECIMAL(19, 2) NOT NULL,
-    recalculation_frequency VARCHAR(255) NOT NULL,
-    balance_on_insufficiency DECIMAL(19, 2) NOT NULL,
+    id VARCHAR(26) NOT NULL,
+    contract_number VARCHAR(50) NOT NULL,
+    hub_guarantee_id VARCHAR(50) NOT NULL,
+    status VARCHAR(20) NOT NULL,
+    amount DECIMAL(15, 2) NOT NULL,
     start_date TIMESTAMP NOT NULL,
-    end_date TIMESTAMP,
-    status VARCHAR(255) NOT NULL,
-    created_at TIMESTAMP NOT NULL,
-    updated_at TIMESTAMP NOT NULL,
-    creation_retry_attempts INTEGER DEFAULT 0,
-    proactive_search_attempts INTEGER DEFAULT 0
+    end_date TIMESTAMP NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_by VARCHAR(100),
+    updated_by VARCHAR(100),
+    PRIMARY KEY (id)
 );
 
--- Card Receivables Holder
+-- Table: card_receivables_holder
 CREATE TABLE card_receivables_holder (
-    id BIGSERIAL PRIMARY KEY,
-    card_receivables_lock_id BIGINT NOT NULL,
-    tax_id VARCHAR(14) NOT NULL,
-    root_tax_id_operation BOOLEAN NOT NULL,
-    payment_account_branch VARCHAR(10) NOT NULL,
-    payment_account_number VARCHAR(20) NOT NULL,
-    payment_account_id VARCHAR(50) NOT NULL,
-    created_at TIMESTAMP NOT NULL,
-    updated_at TIMESTAMP NOT NULL,
-    CONSTRAINT fk_card_receivables_holder_lock FOREIGN KEY (card_receivables_lock_id) REFERENCES card_receivables_lock (id)
+    id VARCHAR(26) NOT NULL,
+    card_receivables_lock_id VARCHAR(26) NOT NULL,
+    holder_type VARCHAR(50) NOT NULL,
+    holder_document VARCHAR(20) NOT NULL,
+    holder_name VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    FOREIGN KEY (card_receivables_lock_id) REFERENCES card_receivables_lock (id) ON DELETE CASCADE
 );
 
--- Card Receivables Owner Arrangement
+-- Table: card_receivables_owner_arrangement
 CREATE TABLE card_receivables_owner_arrangement (
-    id BIGSERIAL PRIMARY KEY,
-    card_receivables_lock_holder_id BIGINT NOT NULL,
-    arrangement_code VARCHAR(10) NOT NULL,
-    CONSTRAINT fk_card_receivables_owner_arrangement_holder FOREIGN KEY (
-        card_receivables_lock_holder_id
-    ) REFERENCES card_receivables_holder (id)
+    id VARCHAR(26) NOT NULL,
+    card_receivables_holder_id VARCHAR(26) NOT NULL,
+    arrangement_type VARCHAR(50) NOT NULL,
+    arrangement_code VARCHAR(50) NOT NULL,
+    arrangement_description TEXT,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    FOREIGN KEY (card_receivables_holder_id) REFERENCES card_receivables_holder (id) ON DELETE CASCADE
 );
 
--- Card Receivables Owner Accreditor
+-- Table: card_receivables_owner_accreditor
 CREATE TABLE card_receivables_owner_accreditor (
-    id BIGSERIAL PRIMARY KEY,
-    card_receivables_lock_holder_id BIGINT NOT NULL,
-    accreditor_tax_id VARCHAR(14) NOT NULL,
-    CONSTRAINT fk_card_receivables_owner_accreditor_holder FOREIGN KEY (
-        card_receivables_lock_holder_id
-    ) REFERENCES card_receivables_holder (id)
+    id VARCHAR(26) NOT NULL,
+    card_receivables_holder_id VARCHAR(26) NOT NULL,
+    accreditor_code VARCHAR(50) NOT NULL,
+    accreditor_name VARCHAR(255) NOT NULL,
+    accreditor_document VARCHAR(20),
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    FOREIGN KEY (card_receivables_holder_id) REFERENCES card_receivables_holder (id) ON DELETE CASCADE
 );
 
--- Card Receivables Lock Nuclea
+-- Table: card_receivables_lock_nuclea
 CREATE TABLE card_receivables_lock_nuclea (
-    id BIGSERIAL PRIMARY KEY,
-    card_receivables_lock_id BIGINT NOT NULL,
-    creation_retry_attempts INTEGER DEFAULT 0,
-    proactive_search_attempts INTEGER DEFAULT 0,
-    protocol VARCHAR(50) NOT NULL,
-    created_at TIMESTAMP NOT NULL,
-    updated_at TIMESTAMP NOT NULL,
-    CONSTRAINT fk_card_receivables_lock_nuclea_lock FOREIGN KEY (card_receivables_lock_id) REFERENCES card_receivables_lock (id)
+    id VARCHAR(26) NOT NULL,
+    card_receivables_lock_id VARCHAR(26) NOT NULL,
+    protocol VARCHAR(100),
+    creation_retry_attempts INTEGER NOT NULL DEFAULT 0,
+    proactive_search_attempts INTEGER NOT NULL DEFAULT 0,
+    last_attempt_date TIMESTAMP,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    FOREIGN KEY (card_receivables_lock_id) REFERENCES card_receivables_lock (id) ON DELETE CASCADE
 );
 
--- Card Receivables Lock Cerc
+-- Table: card_receivables_lock_cerc
 CREATE TABLE card_receivables_lock_cerc (
-    id BIGSERIAL PRIMARY KEY,
-    card_receivables_lock_id BIGINT NOT NULL,
-    creation_retry_attempts INTEGER DEFAULT 0,
-    proactive_search_attempts INTEGER DEFAULT 0,
-    created_at TIMESTAMP NOT NULL,
-    updated_at TIMESTAMP NOT NULL,
-    CONSTRAINT fk_card_receivables_lock_cerc_lock FOREIGN KEY (card_receivables_lock_id) REFERENCES card_receivables_lock (id)
+    id VARCHAR(26) NOT NULL,
+    card_receivables_lock_id VARCHAR(26) NOT NULL,
+    creation_retry_attempts INTEGER NOT NULL DEFAULT 0,
+    proactive_search_attempts INTEGER NOT NULL DEFAULT 0,
+    last_attempt_date TIMESTAMP,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    FOREIGN KEY (card_receivables_lock_id) REFERENCES card_receivables_lock (id) ON DELETE CASCADE
 );
 
--- Card Receivables Lock Cerc Protocols
+-- Table: card_receivables_lock_cerc_protocols
 CREATE TABLE card_receivables_lock_cerc_protocols (
-    id BIGSERIAL PRIMARY KEY,
-    card_receivables_lock_cerc_id BIGINT NOT NULL,
-    action VARCHAR(50) NOT NULL,
-    protocol VARCHAR(50) NOT NULL,
-    created_at TIMESTAMP NOT NULL,
-    CONSTRAINT fk_card_receivables_lock_cerc_protocols_cerc FOREIGN KEY (card_receivables_lock_cerc_id) REFERENCES card_receivables_lock_cerc (id)
+    id VARCHAR(26) NOT NULL,
+    card_receivables_lock_cerc_id VARCHAR(26) NOT NULL,
+    protocol VARCHAR(100) NOT NULL,
+    protocol_date TIMESTAMP NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    FOREIGN KEY (card_receivables_lock_cerc_id) REFERENCES card_receivables_lock_cerc (id) ON DELETE CASCADE
 );
 
--- Card Receivables Contract Installments
+-- Table: card_receivables_contract_installments
 CREATE TABLE card_receivables_contract_installments (
-    id BIGSERIAL PRIMARY KEY,
-    card_receivables_lock_id BIGINT NOT NULL,
+    id VARCHAR(26) NOT NULL,
+    card_receivables_lock_id VARCHAR(26) NOT NULL,
     installment_number INTEGER NOT NULL,
-    date DATE NOT NULL,
-    value DECIMAL(19, 2) NOT NULL,
-    created_at TIMESTAMP NOT NULL,
-    CONSTRAINT fk_card_receivables_contract_installments_lock FOREIGN KEY (card_receivables_lock_id) REFERENCES card_receivables_lock (id)
+    installment_amount DECIMAL(15, 2) NOT NULL,
+    installment_due_date DATE NOT NULL,
+    installment_status VARCHAR(20) NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    FOREIGN KEY (card_receivables_lock_id) REFERENCES card_receivables_lock (id) ON DELETE CASCADE
 );
 
--- Indexes for performance
+-- Table: card_receivables_schedules
+CREATE TABLE card_receivables_schedules (
+    id VARCHAR(26) NOT NULL,
+    schedule_type VARCHAR(50) NOT NULL,
+    schedule_description TEXT,
+    schedule_date TIMESTAMP NOT NULL,
+    schedule_status VARCHAR(20) NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id)
+);
+
+-- Create indexes for better performance
 CREATE INDEX idx_card_receivables_lock_contract_number ON card_receivables_lock (contract_number);
 
 CREATE INDEX idx_card_receivables_lock_hub_guarantee_id ON card_receivables_lock (hub_guarantee_id);
 
 CREATE INDEX idx_card_receivables_lock_status ON card_receivables_lock (status);
 
+CREATE INDEX idx_card_receivables_lock_start_date ON card_receivables_lock (start_date);
+
+CREATE INDEX idx_card_receivables_lock_end_date ON card_receivables_lock (end_date);
+
 CREATE INDEX idx_card_receivables_holder_lock_id ON card_receivables_holder (card_receivables_lock_id);
 
-CREATE INDEX idx_card_receivables_holder_tax_id ON card_receivables_holder (tax_id);
-
-CREATE INDEX idx_card_receivables_owner_arrangement_holder_id ON card_receivables_owner_arrangement (
-    card_receivables_lock_holder_id
-);
-
-CREATE INDEX idx_card_receivables_owner_accreditor_holder_id ON card_receivables_owner_accreditor (
-    card_receivables_lock_holder_id
-);
+CREATE INDEX idx_card_receivables_holder_document ON card_receivables_holder (holder_document);
 
 CREATE INDEX idx_card_receivables_lock_nuclea_lock_id ON card_receivables_lock_nuclea (card_receivables_lock_id);
 
@@ -124,88 +143,44 @@ CREATE INDEX idx_card_receivables_lock_nuclea_protocol ON card_receivables_lock_
 
 CREATE INDEX idx_card_receivables_lock_cerc_lock_id ON card_receivables_lock_cerc (card_receivables_lock_id);
 
-CREATE INDEX idx_card_receivables_lock_cerc_protocols_cerc_id ON card_receivables_lock_cerc_protocols (card_receivables_lock_cerc_id);
-
-CREATE INDEX idx_card_receivables_lock_cerc_protocols_protocol ON card_receivables_lock_cerc_protocols (protocol);
-
 CREATE INDEX idx_card_receivables_contract_installments_lock_id ON card_receivables_contract_installments (card_receivables_lock_id);
 
-CREATE INDEX idx_card_receivables_contract_installments_date ON card_receivables_contract_installments (date);
+CREATE INDEX idx_card_receivables_contract_installments_due_date ON card_receivables_contract_installments (installment_due_date);
 ```
 
 ```kotlin
-interface CardReceivablesLockDataAccess {
-  // Card Receivables Lock methods
-  fun create(lock: CardReceivablesLock): CardReceivablesLock
-  fun update(lock: CardReceivablesLock): CardReceivablesLock
-  fun getById(id: Long): CardReceivablesLock?
-  fun findByContractNumber(contractNumber: String): CardReceivablesLock?
-  fun incrementCreationRetryAttempts(id: Long): CardReceivablesLock?
-  fun incrementProactiveSearchAttempts(id: Long): CardReceivablesLock?
-}
-```
+package com.finapp.domain.entities
 
-```kotlin
-@Entity
-@Table(name = "card_receivables_contract_installments")
-data class CardReceivablesContractInstallments(
-        @Id @GeneratedValue(strategy = GenerationType.IDENTITY) val id: Long? = null,
-        @ManyToOne
-        @JoinColumn(name = "card_receivables_lock_id")
-        val cardReceivablesLock: CardReceivablesLock,
-        val installmentNumber: Int,
-        val date: LocalDate,
-        val value: BigDecimal,
-        val createdAt: LocalDateTime
-)
-
-@Entity
-@Table(name = "card_receivables_holder")
-data class CardReceivablesHolder(
-        @Id @GeneratedValue(strategy = GenerationType.IDENTITY) val id: Long? = null,
-        @ManyToOne
-        @JoinColumn(name = "card_receivables_lock_id")
-        val cardReceivablesLock: CardReceivablesLock,
-        val taxId: String,
-        val rootTaxIdOperation: Boolean,
-        val paymentAccountBranch: String,
-        val paymentAccountNumber: String,
-        val paymentAccountId: String,
-        val createdAt: LocalDateTime,
-        val updatedAt: LocalDateTime,
-        @OneToMany(
-                mappedBy = "cardReceivablesLockHolder",
-                cascade = [CascadeType.ALL],
-                fetch = FetchType.LAZY
-        )
-        val arrangements: MutableList<CardReceivablesOwnerArrangement> = mutableListOf(),
-        @OneToMany(
-                mappedBy = "cardReceivablesLockHolder",
-                cascade = [CascadeType.ALL],
-                fetch = FetchType.LAZY
-        )
-        val accreditors: MutableList<CardReceivablesOwnerAccreditor> = mutableListOf()
-)
+import com.finapp.domain.enums.CardReceivablesLockStatus
+import jakarta.persistence.*
+import java.math.BigDecimal
+import java.time.LocalDateTime
 
 @Entity
 @Table(name = "card_receivables_lock")
-data class CardReceivablesLock(
-        @Id @GeneratedValue(strategy = GenerationType.IDENTITY) val id: Long? = null,
-        val hubGuaranteeId: Long,
-        val contractNumber: String,
-        val contractSource: String,
-        val ipoc: String,
-        val ownerPersonId: Long? = null,
-        val amount: Double,
-        val recalculationFrequency: String,
-        val balanceOnInsufficiency: Double,
-        val startDate: LocalDateTime,
-        val endDate: LocalDateTime? = null,
-        var status: String,
-        val createdAt: LocalDateTime,
-        var updatedAt: LocalDateTime,
-        var creationRetryAttempts: Int = 0,
-        var proactiveSearchAttempts: Int = 0,
+class CardReceivablesLock(
+        @Id @Column(name = "id", length = 26, nullable = false) val id: String,
+        @Column(name = "hub_guarantee_id", length = 50, nullable = false)
+        val hubGuaranteeId: String,
+        @Column(name = "contract_number", length = 50, nullable = false) val contractNumber: String,
+        @Column(name = "contract_source", length = 50) val contractSource: String?,
+        @Column(name = "ipoc", length = 50) val ipoc: String?,
+        @Column(name = "register", length = 50) val register: String?,
+        @Column(name = "owner_person_id", length = 26) val ownerPersonId: String?,
+        @Column(name = "amount", precision = 19, scale = 2, nullable = false)
+        val amount: BigDecimal,
+        @Column(name = "recalculation_frequency", length = 50) val recalculationFrequency: String?,
+        @Column(name = "consider_balance_on_insufficiency")
+        val considerBalanceOnInsufficiency: Boolean = false,
+        @Column(name = "start_date", nullable = false) val startDate: LocalDateTime,
+        @Column(name = "end_date") val endDate: LocalDateTime?,
+        @Enumerated(EnumType.STRING)
+        @Column(name = "status", length = 20, nullable = false)
+        val status: CardReceivablesLockStatus,
+        @Column(name = "created_at", nullable = false)
+        val createdAt: LocalDateTime = LocalDateTime.now(),
+        @Column(name = "updated_at", nullable = false)
+        val updatedAt: LocalDateTime = LocalDateTime.now(),
         @OneToMany(
                 mappedBy = "cardReceivablesLock",
                 cascade = [CascadeType.ALL],
@@ -229,28 +204,55 @@ data class CardReceivablesLock(
                 cascade = [CascadeType.ALL],
                 fetch = FetchType.LAZY
         )
-        val contractInstallments: MutableList<CardReceivablesContractInstallments> = mutableListOf()
-)
-```
+        val contractInstallments: MutableList<CardReceivablesContractInstallment> = mutableListOf()
+) {}
 
-```kotlin
+package com.finapp.domain.entities
+
 import jakarta.persistence.*
 import java.time.LocalDateTime
 
 @Entity
-@Table(name = "card_receivables_lock_nuclea")
-data class CardReceivablesLockNuclea(
-        @Id @GeneratedValue(strategy = GenerationType.IDENTITY) val id: Long? = null,
-        @ManyToOne
-        @JoinColumn(name = "card_receivables_lock_id")
-        val cardReceivablesLock: CardReceivablesLock,
-        var creationRetryAttempts: Int = 0,
-        var proactiveSearchAttempts: Int = 0,
-        val protocol: String,
-        val createdAt: LocalDateTime,
-        var updatedAt: LocalDateTime
-)
+@Table(name = "card_receivables_holder")
+class CardReceivablesHolder(
+        @Id @Column(name = "id", length = 26, nullable = false) val id: String,
+        @ManyToOne(fetch = FetchType.LAZY)
+        @JoinColumn(name = "card_receivables_lock_id", nullable = false)
+        var cardReceivablesLock: CardReceivablesLock? = null,
+        @Column(name = "tax_id", length = 20, nullable = false) val taxId: String,
+        @Column(name = "root_tax_id_operation") val rootTaxIdOperation: Boolean = false,
+        @Column(name = "payment_account_branch", length = 10) val paymentAccountBranch: String?,
+        @Column(name = "payment_account_number", length = 20) val paymentAccountNumber: String?,
+        @Column(name = "payment_account_id", length = 26) val paymentAccountId: String?,
+        @Column(name = "created_at", nullable = false)
+        val createdAt: LocalDateTime = LocalDateTime.now(),
+        @Column(name = "updated_at", nullable = false)
+        val updatedAt: LocalDateTime = LocalDateTime.now(),
+        @OneToMany(
+                mappedBy = "cardReceivablesHolder",
+                cascade = [CascadeType.ALL],
+                fetch = FetchType.LAZY
+        )
+        val arrangements: MutableList<CardReceivablesOwnerArrangement> = mutableListOf(),
+        @OneToMany(
+                mappedBy = "cardReceivablesHolder",
+                cascade = [CascadeType.ALL],
+                fetch = FetchType.LAZY
+        )
+        val accreditors: MutableList<CardReceivablesOwnerAccreditor> = mutableListOf()
+) {
+  fun addArrangement(arrangement: CardReceivablesOwnerArrangement) {
+    arrangement.cardReceivablesHolder = this
+    arrangements.add(arrangement)
+  }
 
+  fun addAccreditor(accreditor: CardReceivablesOwnerAccreditor) {
+    accreditor.cardReceivablesHolder = this
+    accreditors.add(accreditor)
+  }
+}
+
+package com.finapp.domain.entities
 
 import jakarta.persistence.*
 import java.math.BigDecimal
@@ -259,484 +261,259 @@ import java.time.LocalDateTime
 
 @Entity
 @Table(name = "card_receivables_contract_installments")
-data class CardReceivablesContractInstallments(
-        @Id @GeneratedValue(strategy = GenerationType.IDENTITY) val id: Long? = null,
-        @ManyToOne
-        @JoinColumn(name = "card_receivables_lock_id")
-        val cardReceivablesLock: CardReceivablesLock,
-        val installmentNumber: Int,
-        val date: LocalDate,
-        val value: BigDecimal,
-        val createdAt: LocalDateTime
+class CardReceivablesContractInstallment(
+        @Id @Column(name = "id", length = 26, nullable = false) val id: String,
+        @ManyToOne(fetch = FetchType.LAZY)
+        @JoinColumn(name = "card_receivables_lock_id", nullable = false)
+        var cardReceivablesLock: CardReceivablesLock? = null,
+        @Column(name = "installment_number", nullable = false) val installmentNumber: Int,
+        @Column(name = "date", nullable = false) val date: LocalDate,
+        @Column(name = "value", precision = 19, scale = 2, nullable = false) val value: BigDecimal,
+        @Column(name = "created_at", nullable = false)
+        val createdAt: LocalDateTime = LocalDateTime.now()
 )
+
+package com.finapp.domain.entities
+
+import jakarta.persistence.*
+import java.time.LocalDateTime
+
+@Entity
+@Table(name = "card_receivables_lock_cerc")
+class CardReceivablesLockCerc(
+        @Id @Column(name = "id", length = 26, nullable = false) val id: String,
+        @ManyToOne(fetch = FetchType.LAZY)
+        @JoinColumn(name = "card_receivables_lock_id", nullable = false)
+        var cardReceivablesLock: CardReceivablesLock? = null,
+        @Column(name = "creation_retry_attempts", nullable = false)
+        val creationRetryAttempts: Int = 0,
+        @Column(name = "proactive_search_attempts", nullable = false)
+        val proactiveSearchAttempts: Int = 0,
+        @Column(name = "created_at", nullable = false)
+        val createdAt: LocalDateTime = LocalDateTime.now(),
+        @Column(name = "updated_at", nullable = false)
+        val updatedAt: LocalDateTime = LocalDateTime.now(),
+        @OneToMany(
+                mappedBy = "cardReceivablesLockCerc",
+                cascade = [CascadeType.ALL],
+                fetch = FetchType.LAZY
+        )
+        val protocols: MutableList<CardReceivablesLockCercProtocol> = mutableListOf()
+) {
+  fun addProtocol(protocol: CardReceivablesLockCercProtocol) {
+    protocol.cardReceivablesLockCerc = this
+    protocols.add(protocol)
+  }
+}
+
+package com.finapp.domain.entities
+
+import jakarta.persistence.*
+import java.time.LocalDateTime
+
+@Entity
+@Table(name = "card_receivables_lock_cerc_protocols")
+class CardReceivablesLockCercProtocol(
+        @Id @Column(name = "id", length = 26, nullable = false) val id: String,
+        @ManyToOne(fetch = FetchType.LAZY)
+        @JoinColumn(name = "card_receivables_lock_cerc_id", nullable = false)
+        var cardReceivablesLockCerc: CardReceivablesLockCerc? = null,
+        @Column(name = "action", length = 50, nullable = false) val action: String,
+        @Column(name = "protocol", length = 100, nullable = false) val protocol: String,
+        @Column(name = "created_at", nullable = false)
+        val createdAt: LocalDateTime = LocalDateTime.now()
+)
+
+package com.finapp.domain.entities
+
+import jakarta.persistence.*
+import java.time.LocalDateTime
+
+@Entity
+@Table(name = "card_receivables_lock_nuclea")
+class CardReceivablesLockNuclea(
+        @Id @Column(name = "id", length = 26, nullable = false) val id: String,
+        @ManyToOne(fetch = FetchType.LAZY)
+        @JoinColumn(name = "card_receivables_lock_id", nullable = false)
+        var cardReceivablesLock: CardReceivablesLock? = null,
+        @Column(name = "creation_retry_attempts", nullable = false)
+        val creationRetryAttempts: Int = 0,
+        @Column(name = "proactive_search_attempts", nullable = false)
+        val proactiveSearchAttempts: Int = 0,
+        @Column(name = "protocol", length = 100) val protocol: String?,
+        @Column(name = "created_at", nullable = false)
+        val createdAt: LocalDateTime = LocalDateTime.now(),
+        @Column(name = "updated_at", nullable = false)
+        val updatedAt: LocalDateTime = LocalDateTime.now()
+)
+
+package com.finapp.domain.entities
+
+import jakarta.persistence.*
+import java.time.LocalDateTime
+
+@Entity
+@Table(name = "card_receivables_owner_accreditor")
+class CardReceivablesOwnerAccreditor(
+        @Id @Column(name = "id", length = 26, nullable = false) val id: String,
+        @ManyToOne(fetch = FetchType.LAZY)
+        @JoinColumn(name = "card_receivables_lock_holder_id", nullable = false)
+        var cardReceivablesHolder: CardReceivablesHolder? = null,
+        @Column(name = "accreditor_tax_id", length = 20, nullable = false)
+        val accreditorTaxId: String,
+        @Column(name = "created_at", nullable = false)
+        val createdAt: LocalDateTime = LocalDateTime.now(),
+        @Column(name = "updated_at", nullable = false)
+        val updatedAt: LocalDateTime = LocalDateTime.now()
+)
+
+package com.finapp.domain.entities
+
+import jakarta.persistence.*
+import java.time.LocalDateTime
+
+@Entity
+@Table(name = "card_receivables_owner_arrangement")
+class CardReceivablesOwnerArrangement(
+        @Id @Column(name = "id", length = 26, nullable = false) val id: String,
+        @ManyToOne(fetch = FetchType.LAZY)
+        @JoinColumn(name = "card_receivables_lock_holder_id", nullable = false)
+        var cardReceivablesHolder: CardReceivablesHolder? = null,
+        @Column(name = "arrangement_code", length = 50, nullable = false)
+        val arrangementCode: String,
+        @Column(name = "created_at", nullable = false)
+        val createdAt: LocalDateTime = LocalDateTime.now(),
+        @Column(name = "updated_at", nullable = false)
+        val updatedAt: LocalDateTime = LocalDateTime.now()
+)
+
+package com.finapp.domain.enums
+
+enum class CardReceivablesLockStatus {
+  ACTIVE,
+  INACTIVE,
+  PENDING,
+  CANCELLED,
+  EXPIRED
+}
+
 ```
 
 ```kotlin
-@Service
-class CardReceivablesLockDataAccessImpl(
-        private val cardReceivablesLockRepository: CardReceivablesLockRepository,
-        private val cardReceivablesHolderRepository: CardReceivablesHolderRepository,
-        private val cardReceivablesOwnerArrangementRepository:
-                CardReceivablesOwnerArrangementRepository,
-        private val cardReceivablesOwnerAccreditorRepository:
-                CardReceivablesOwnerAccreditorRepository,
-        private val cardReceivablesLockNucleaRepository: CardReceivablesLockNucleaRepository,
-        private val cardReceivablesLockCercRepository: CardReceivablesLockCercRepository,
-        private val cardReceivablesLockCercProtocolsRepository:
-                CardReceivablesLockCercProtocolsRepository,
-        private val cardReceivablesContractInstallmentsRepository:
-                CardReceivablesContractInstallmentsRepository
-) : CardReceivablesLockDataAccess {
+@Component
+class CardReceivablesLockCercDataAccessImpl(
+        private val cardReceivablesLockCercRepository: CardReceivablesLockCercRepository
+) : CardReceivablesLockCercDataAccess {
 
-//Card Receivables Lock methods
-  override fun create(lock: CardReceivablesLock): CardReceivablesLock {
-    return cardReceivablesLockRepository.save(lock)
+  override fun create(cardReceivablesLockCerc: CardReceivablesLockCerc): CardReceivablesLockCerc {
+    return cardReceivablesLockCercRepository.save(cardReceivablesLockCerc)
   }
 
-  override fun update(lock: CardReceivablesLock): CardReceivablesLock {
-    return cardReceivablesLockRepository.save(lock)
+  override fun update(cardReceivablesLockCerc: CardReceivablesLockCerc): CardReceivablesLockCerc {
+    return cardReceivablesLockCercRepository.save(cardReceivablesLockCerc)
   }
 
-  override fun getById(id: Long): CardReceivablesLock? {
-    return cardReceivablesLockRepository.findById(id).orElse(null)
-  }
-
-  override fun findByContractNumber(contractNumber: String): CardReceivablesLock? {
-    return cardReceivablesLockRepository.findByContractNumber(contractNumber)
-  }
-
-  override fun incrementCreationRetryAttempts(id: Long): CardReceivablesLock? {
-    val lock = getById(id) ?: return null
-    lock.creationRetryAttempts += 1
-    return update(lock)
-  }
-
-  override fun incrementProactiveSearchAttempts(id: Long): CardReceivablesLock? {
-    val lock = getById(id) ?: return null
-    lock.proactiveSearchAttempts += 1
-    return update(lock)
-  }
-
-//Card Receivables Holder methods
-  override fun createHolder(holder: CardReceivablesHolder): CardReceivablesHolder {
-    return cardReceivablesHolderRepository.save(holder)
-  }
-
-  override fun updateHolder(holder: CardReceivablesHolder): CardReceivablesHolder {
-    return cardReceivablesHolderRepository.save(holder)
-  }
-
-  override fun getHolderById(id: Long): CardReceivablesHolder? {
-    return cardReceivablesHolderRepository.findById(id).orElse(null)
-  }
-
-  override fun findHoldersByLockId(lockId: Long): List<CardReceivablesHolder> {
-    return cardReceivablesHolderRepository.findByCardReceivablesLockId(lockId)
-  }
-
-  override fun findHoldersByTaxId(taxId: String): List<CardReceivablesHolder> {
-    return cardReceivablesHolderRepository.findByTaxId(taxId)
-  }
-
-//Card Receivables Owner Arrangement methods
-  override fun createOwnerArrangement(
-          arrangement: CardReceivablesOwnerArrangement
-  ): CardReceivablesOwnerArrangement {
-    return cardReceivablesOwnerArrangementRepository.save(arrangement)
-  }
-
-  override fun findOwnerArrangementsByHolderId(
-          holderId: Long
-  ): List<CardReceivablesOwnerArrangement> {
-    return cardReceivablesOwnerArrangementRepository.findByCardReceivablesLockHolderId(holderId)
-  }
-
-//Card Receivables Owner Accreditor methods
-  override fun createOwnerAccreditor(
-          accreditor: CardReceivablesOwnerAccreditor
-  ): CardReceivablesOwnerAccreditor {
-    return cardReceivablesOwnerAccreditorRepository.save(accreditor)
-  }
-
-  override fun findOwnerAccreditorsByHolderId(
-          holderId: Long
-  ): List<CardReceivablesOwnerAccreditor> {
-    return cardReceivablesOwnerAccreditorRepository.findByCardReceivablesLockHolderId(holderId)
-  }
-
-//Card Receivables Lock Nuclea methods
-  override fun createNuclea(nuclea: CardReceivablesLockNuclea): CardReceivablesLockNuclea {
-    return cardReceivablesLockNucleaRepository.save(nuclea)
-  }
-
-  override fun updateNuclea(nuclea: CardReceivablesLockNuclea): CardReceivablesLockNuclea {
-    return cardReceivablesLockNucleaRepository.save(nuclea)
-  }
-
-  override fun getNucleaById(id: Long): CardReceivablesLockNuclea? {
-    return cardReceivablesLockNucleaRepository.findById(id).orElse(null)
-  }
-
-  override fun findNucleaByLockId(lockId: Long): List<CardReceivablesLockNuclea> {
-    return cardReceivablesLockNucleaRepository.findByCardReceivablesLockId(lockId)
-  }
-
-  override fun findNucleaByProtocol(protocol: String): CardReceivablesLockNuclea? {
-    return cardReceivablesLockNucleaRepository.findByProtocol(protocol)
-  }
-
-  override fun incrementNucleaCreationRetryAttempts(id: Long): CardReceivablesLockNuclea? {
-    val nuclea = getNucleaById(id) ?: return null
-    nuclea.creationRetryAttempts += 1
-    return updateNuclea(nuclea)
-  }
-
-  override fun incrementNucleaProactiveSearchAttempts(id: Long): CardReceivablesLockNuclea? {
-    val nuclea = getNucleaById(id) ?: return null
-    nuclea.proactiveSearchAttempts += 1
-    return updateNuclea(nuclea)
-  }
-
-//Card Receivables Lock Cerc methods
-  override fun createCerc(cerc: CardReceivablesLockCerc): CardReceivablesLockCerc {
-    return cardReceivablesLockCercRepository.save(cerc)
-  }
-
-  override fun updateCerc(cerc: CardReceivablesLockCerc): CardReceivablesLockCerc {
-    return cardReceivablesLockCercRepository.save(cerc)
-  }
-
-  override fun getCercById(id: Long): CardReceivablesLockCerc? {
+  override fun getById(id: String): CardReceivablesLockCerc? {
     return cardReceivablesLockCercRepository.findById(id).orElse(null)
   }
 
-  override fun findCercByLockId(lockId: Long): List<CardReceivablesLockCerc> {
-    return cardReceivablesLockCercRepository.findByCardReceivablesLockId(lockId)
+  override fun findByCardReceivablesLockId(
+          cardReceivablesLockId: String
+  ): CardReceivablesLockCerc? {
+    return cardReceivablesLockCercRepository.findByCardReceivablesLockId(cardReceivablesLockId)
   }
 
-  override fun incrementCercCreationRetryAttempts(id: Long): CardReceivablesLockCerc? {
-    val cerc = getCercById(id) ?: return null
-    cerc.creationRetryAttempts += 1
-    return updateCerc(cerc)
+  override fun incrementCreationRetryAttempts(id: String) {
+    cardReceivablesLockCercRepository.incrementCreationRetryAttempts(id, LocalDateTime.now())
   }
 
-  override fun incrementCercProactiveSearchAttempts(id: Long): CardReceivablesLockCerc? {
-    val cerc = getCercById(id) ?: return null
-    cerc.proactiveSearchAttempts += 1
-    return updateCerc(cerc)
-  }
-
-//Card Receivables Lock Cerc Protocols methods
-  override fun createCercProtocol(
-          protocol: CardReceivablesLockCercProtocols
-  ): CardReceivablesLockCercProtocols {
-    return cardReceivablesLockCercProtocolsRepository.save(protocol)
-  }
-
-  override fun findCercProtocolsByCercId(cercId: Long): List<CardReceivablesLockCercProtocols> {
-    return cardReceivablesLockCercProtocolsRepository.findByCardReceivablesLockCercId(cercId)
-  }
-
-  override fun findCercProtocolsByProtocol(
-          protocol: String
-  ): List<CardReceivablesLockCercProtocols> {
-    return cardReceivablesLockCercProtocolsRepository.findByProtocol(protocol)
-  }
-
-//Card Receivables Contract Installments methods
-  override fun createContractInstallment(
-          installment: CardReceivablesContractInstallments
-  ): CardReceivablesContractInstallments {
-    return cardReceivablesContractInstallmentsRepository.save(installment)
-  }
-
-  override fun findContractInstallmentsByLockId(
-          lockId: Long
-  ): List<CardReceivablesContractInstallments> {
-    return cardReceivablesContractInstallmentsRepository.findByCardReceivablesLockId(lockId)
-  }
-
-  override fun findContractInstallmentsByLockIdAndDateRange(
-          lockId: Long,
-          startDate: LocalDate,
-          endDate: LocalDate
-  ): List<CardReceivablesContractInstallments> {
-    return cardReceivablesContractInstallmentsRepository.findByCardReceivablesLockIdAndDateBetween(
-            lockId,
-            startDate,
-            endDate
-    )
+  override fun incrementProactiveSearchAttempts(id: String) {
+    cardReceivablesLockCercRepository.incrementProactiveSearchAttempts(id, LocalDateTime.now())
   }
 }
+
+import com.finapp.domain.entities.CardReceivablesLockCerc
+
+interface CardReceivablesLockCercDataAccess {
+
+  fun create(cardReceivablesLockCerc: CardReceivablesLockCerc): CardReceivablesLockCerc
+
+  fun update(cardReceivablesLockCerc: CardReceivablesLockCerc): CardReceivablesLockCerc
+
+  fun getById(id: String): CardReceivablesLockCerc?
+
+  fun findByCardReceivablesLockId(cardReceivablesLockId: String): CardReceivablesLockCerc?
+
+  fun incrementCreationRetryAttempts(id: String): Unit
+
+  fun incrementProactiveSearchAttempts(id: String): Unit
+}
+
+@Component
+class CardReceivablesLockDataAccessImpl(
+        private val cardReceivablesLockRepository: CardReceivablesLockRepository,
+        private val cardReceivablesLockNucleaRepository: CardReceivablesLockNucleaRepository,
+        private val cardReceivablesLockCercRepository: CardReceivablesLockCercRepository
+) : CardReceivablesLockDataAccess {
+
+  override fun create(cardReceivablesLockDto: CardReceivablesLockDto): CardReceivablesLockDto {
+    val cardReceivablesLock =
+            CardReceivablesLockMapper.dtoToEntityMapper.map(cardReceivablesLockDto)
+    val savedCardReceivablesLock = cardReceivablesLockRepository.save(cardReceivablesLock)
+    return CardReceivablesLockMapper.entityToDtoMapper.map(savedCardReceivablesLock)
+  }
+
+  override fun update(cardReceivablesLockDto: CardReceivablesLockDto): CardReceivablesLockDto {
+    val cardReceivablesLock =
+            CardReceivablesLockMapper.dtoToEntityMapper.map(cardReceivablesLockDto)
+    val updatedCardReceivablesLock = cardReceivablesLockRepository.save(cardReceivablesLock)
+    return CardReceivablesLockMapper.entityToDtoMapper.map(updatedCardReceivablesLock)
+  }
+
+  override fun getById(id: String): CardReceivablesLockDto? {
+    val cardReceivablesLock = cardReceivablesLockRepository.findById(id).orElse(null)
+    return cardReceivablesLock?.let { CardReceivablesLockMapper.entityToDtoMapper.map(it) }
+  }
+
+  override fun incrementCreationRetryAttempts(id: String) {
+    // Incrementa nas entidades Nuclea e Cerc relacionadas
+    cardReceivablesLockNucleaRepository.incrementCreationRetryAttempts(id, LocalDateTime.now())
+    cardReceivablesLockCercRepository.incrementCreationRetryAttempts(id, LocalDateTime.now())
+  }
+
+  override fun incrementProactiveSearchAttempts(id: String) {
+    // Incrementa nas entidades Nuclea e Cerc relacionadas
+    cardReceivablesLockNucleaRepository.incrementProactiveSearchAttempts(id, LocalDateTime.now())
+    cardReceivablesLockCercRepository.incrementProactiveSearchAttempts(id, LocalDateTime.now())
+  }
+}
+
+@Repository
+interface CardReceivablesLockRepository : JpaRepository<CardReceivablesLock, String>
+
+interface CardReceivablesLockDataAccess {
+
+  fun create(cardReceivablesLockDto: CardReceivablesLockDto): CardReceivablesLockDto
+
+  fun update(cardReceivablesLockDto: CardReceivablesLockDto): CardReceivablesLockDto
+
+  fun getById(id: String): CardReceivablesLockDto?
+
+  fun incrementCreationRetryAttempts(id: String): Unit
+
+  fun incrementProactiveSearchAttempts(id: String): Unit
+}
+
+import tech.mappie.api.ObjectMappie
+
+object CardReceivablesLockMapper {
+  object entityToDtoMapper : ObjectMappie<CardReceivablesLock, CardReceivablesLockDto>()
+  object dtoToEntityMapper : ObjectMappie<CardReceivablesLockDto, CardReceivablesLock>()
+}
+
+
 ```
 
 ```kotlin
 
-class CardReceivablesLockDataAccessImplTest {
-  private lateinit var cardReceivablesLockRepository: CardReceivablesLockRepository
-  private lateinit var cardReceivablesHolderRepository: CardReceivablesHolderRepository
-  private lateinit var cardReceivablesOwnerArrangementRepository:
-          CardReceivablesOwnerArrangementRepository
-  private lateinit var cardReceivablesOwnerAccreditorRepository:
-          CardReceivablesOwnerAccreditorRepository
-  private lateinit var cardReceivablesLockNucleaRepository: CardReceivablesLockNucleaRepository
-  private lateinit var cardReceivablesLockCercRepository: CardReceivablesLockCercRepository
-  private lateinit var cardReceivablesLockCercProtocolsRepository:
-          CardReceivablesLockCercProtocolsRepository
-  private lateinit var cardReceivablesContractInstallmentsRepository:
-          CardReceivablesContractInstallmentsRepository
-  private lateinit var dataAccess: CardReceivablesLockDataAccessImpl
-
-  @BeforeEach
-  fun setUp() {
-    cardReceivablesLockRepository = mockk<CardReceivablesLockRepository>()
-    cardReceivablesHolderRepository = mockk<CardReceivablesHolderRepository>()
-    cardReceivablesOwnerArrangementRepository = mockk<CardReceivablesOwnerArrangementRepository>()
-    cardReceivablesOwnerAccreditorRepository = mockk<CardReceivablesOwnerAccreditorRepository>()
-    cardReceivablesLockNucleaRepository = mockk<CardReceivablesLockNucleaRepository>()
-    cardReceivablesLockCercRepository = mockk<CardReceivablesLockCercRepository>()
-    cardReceivablesLockCercProtocolsRepository = mockk<CardReceivablesLockCercProtocolsRepository>()
-    cardReceivablesContractInstallmentsRepository =
-            mockk<CardReceivablesContractInstallmentsRepository>()
-
-    dataAccess =
-            CardReceivablesLockDataAccessImpl(
-                    cardReceivablesLockRepository,
-                    cardReceivablesHolderRepository,
-                    cardReceivablesOwnerArrangementRepository,
-                    cardReceivablesOwnerAccreditorRepository,
-                    cardReceivablesLockNucleaRepository,
-                    cardReceivablesLockCercRepository,
-                    cardReceivablesLockCercProtocolsRepository,
-                    cardReceivablesContractInstallmentsRepository
-            )
-  }
-
-  private fun createCardReceivablesLock(
-          id: Long = 1L,
-          hubGuaranteeId: Long = 123L,
-          contractNumber: String = "CONTRACT001",
-          contractSource: String = "SOURCE1",
-          ipoc: String = "IPOC001",
-          ownerPersonId: Long? = 1L,
-          amount: Double = 1000.0,
-          recalculationFrequency: String = "MONTHLY",
-          balanceOnInsufficiency: Double = 500.0,
-          startDate: LocalDateTime = LocalDateTime.now(),
-          endDate: LocalDateTime? = null,
-          status: String = "ACTIVE",
-          createdAt: LocalDateTime = LocalDateTime.now(),
-          updatedAt: LocalDateTime = LocalDateTime.now(),
-          creationRetryAttempts: Int = 0,
-          proactiveSearchAttempts: Int = 0
-  ): CardReceivablesLock {
-    return CardReceivablesLock(
-            id = id,
-            hubGuaranteeId = hubGuaranteeId,
-            contractNumber = contractNumber,
-            contractSource = contractSource,
-            ipoc = ipoc,
-            ownerPersonId = ownerPersonId,
-            amount = amount,
-            recalculationFrequency = recalculationFrequency,
-            balanceOnInsufficiency = balanceOnInsufficiency,
-            startDate = startDate,
-            endDate = endDate,
-            status = status,
-            createdAt = createdAt,
-            updatedAt = updatedAt,
-            creationRetryAttempts = creationRetryAttempts,
-            proactiveSearchAttempts = proactiveSearchAttempts
-    )
-  }
-
-  @Test
-  fun `should create card receivables lock successfully`() {
-    // Given
-    val lock = createCardReceivablesLock(id = 0L)
-    val savedLock = createCardReceivablesLock()
-    every { cardReceivablesLockRepository.save(lock) } returns savedLock
-
-/
-/
-When val result = dataAccess.create (lock)
-
-/
-/
-Then
-    assertEquals(savedLock, result)
-    verify(exactly = 1) { cardReceivablesLockRepository.save(lock) }
-  }
-
-  @Test
-  fun `should update card receivables lock successfully`() {
-    // Given
-    val lock = createCardReceivablesLock()
-    val updatedLock = createCardReceivablesLock(status = "UPDATED")
-    every { cardReceivablesLockRepository.save(lock) } returns updatedLock
-
-/
-/
-When val result = dataAccess.update (lock)
-
-/
-/
-Then
-    assertEquals(updatedLock, result)
-    verify(exactly = 1) { cardReceivablesLockRepository.save(lock) }
-  }
-
-  @Test
-  fun `should get card receivables lock by id when exists`() {
-    // Given
-    val lockId = 1L
-    val lock = createCardReceivablesLock(id = lockId)
-    every { cardReceivablesLockRepository.findById(lockId) } returns java.util.Optional.of(lock)
-
-/
-/
-When val result = dataAccess.getById (lockId)
-
-/
-/
-Then
-    assertEquals(lock, result)
-    verify(exactly = 1) { cardReceivablesLockRepository.findById(lockId) }
-  }
-
-  @Test
-  fun `should return null when card receivables lock not found by id`() {
-    // Given
-    val lockId = 999L
-    every { cardReceivablesLockRepository.findById(lockId) } returns java.util.Optional.empty()
-
-/
-/
-When val result = dataAccess.getById (lockId)
-
-/
-/
-Then
-    assertNull(result)
-    verify(exactly = 1) { cardReceivablesLockRepository.findById(lockId) }
-  }
-
-  @Test
-  fun `should find card receivables lock by contract number when exists`() {
-    // Given
-    val contractNumber = "CONTRACT001"
-    val lock = createCardReceivablesLock(contractNumber = contractNumber)
-    every { cardReceivablesLockRepository.findByContractNumber(contractNumber) } returns lock
-
-/
-/
-When val result = dataAccess.findByContractNumber (contractNumber)
-
-/
-/
-Then
-    assertEquals(lock, result)
-    verify(exactly = 1) { cardReceivablesLockRepository.findByContractNumber(contractNumber) }
-  }
-
-  @Test
-  fun `should return null when card receivables lock not found by contract number`() {
-    // Given
-    val contractNumber = "NONEXISTENT"
-    every { cardReceivablesLockRepository.findByContractNumber(contractNumber) } returns null
-
-/
-/
-When val result = dataAccess.findByContractNumber (contractNumber)
-
-/
-/
-Then
-    assertNull(result)
-    verify(exactly = 1) { cardReceivablesLockRepository.findByContractNumber(contractNumber) }
-  }
-
-  @Test
-  fun `should increment creation retry attempts successfully`() {
-    // Given
-    val lockId = 1L
-    val lock = createCardReceivablesLock(id = lockId, creationRetryAttempts = 2)
-    val updatedLock = createCardReceivablesLock(id = lockId, creationRetryAttempts = 3)
-
-    every { cardReceivablesLockRepository.findById(lockId) } returns java.util.Optional.of(lock)
-    every { cardReceivablesLockRepository.save(lock) } returns updatedLock
-
-/
-/
-When val result = dataAccess.incrementCreationRetryAttempts (lockId)
-
-/
-/
-Then
-    assertEquals(updatedLock, result)
-    assertEquals(3, result?.creationRetryAttempts)
-    verify(exactly = 1) { cardReceivablesLockRepository.findById(lockId) }
-    verify(exactly = 1) { cardReceivablesLockRepository.save(lock) }
-  }
-
-  @Test
-  fun `should return null when incrementing creation retry attempts for non-existent lock`() {
-    // Given
-    val lockId = 999L
-    every { cardReceivablesLockRepository.findById(lockId) } returns java.util.Optional.empty()
-
-/
-/
-When val result = dataAccess.incrementCreationRetryAttempts (lockId)
-
-/
-/
-Then
-    assertNull(result)
-    verify(exactly = 1) { cardReceivablesLockRepository.findById(lockId) }
-    verify(exactly = 0) { cardReceivablesLockRepository.save(any()) }
-  }
-
-  @Test
-  fun `should increment proactive search attempts successfully`() {
-    // Given
-    val lockId = 1L
-    val lock = createCardReceivablesLock(id = lockId, proactiveSearchAttempts = 1)
-    val updatedLock = createCardReceivablesLock(id = lockId, proactiveSearchAttempts = 2)
-
-    every { cardReceivablesLockRepository.findById(lockId) } returns java.util.Optional.of(lock)
-    every { cardReceivablesLockRepository.save(lock) } returns updatedLock
-
-/
-/
-When val result = dataAccess.incrementProactiveSearchAttempts (lockId)
-
-/
-/
-Then
-    assertEquals(updatedLock, result)
-    assertEquals(2, result?.proactiveSearchAttempts)
-    verify(exactly = 1) { cardReceivablesLockRepository.findById(lockId) }
-    verify(exactly = 1) { cardReceivablesLockRepository.save(lock) }
-  }
-
-  @Test
-  fun `should return null when incrementing proactive search attempts for non-existent lock`() {
-    // Given
-    val lockId = 999L
-    every { cardReceivablesLockRepository.findById(lockId) } returns java.util.Optional.empty()
-
-/
-/
-When val result = dataAccess.incrementProactiveSearchAttempts (lockId)
-
-/
-/
-Then
-    assertNull(result)
-    verify(exactly = 1) { cardReceivablesLockRepository.findById(lockId) }
-    verify(exactly = 0) { cardReceivablesLockRepository.save(any()) }
-  }
-}
 ```
-
