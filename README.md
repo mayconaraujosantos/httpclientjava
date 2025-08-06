@@ -1657,7 +1657,9 @@ object CardReceivablesLockCercMapper {
   }
 }
 
- fun map(entity: CardReceivablesContractInstallmentEntity): CardReceivablesContractInstallmentDto {
+object CardReceivablesContractInstallmentMapper {
+
+  fun map(entity: CardReceivablesContractInstallmentEntity): CardReceivablesContractInstallmentDto {
     return CardReceivablesContractInstallmentDto(
             id = entity.id,
             installmentNumber = entity.installmentNumber,
@@ -1675,6 +1677,9 @@ object CardReceivablesLockCercMapper {
             value = dto.value
     )
   }
+}
+
 ```
+
 
 
