@@ -1657,5 +1657,24 @@ object CardReceivablesLockCercMapper {
   }
 }
 
+ fun map(entity: CardReceivablesContractInstallmentEntity): CardReceivablesContractInstallmentDto {
+    return CardReceivablesContractInstallmentDto(
+            id = entity.id,
+            installmentNumber = entity.installmentNumber,
+            date = entity.date,
+            value = entity.value
+    )
+  }
+
+  fun map(dto: CardReceivablesContractInstallmentDto): CardReceivablesContractInstallmentEntity {
+    return CardReceivablesContractInstallmentEntity(
+            id = dto.id,
+            cardReceivablesLock = null,
+            installmentNumber = dto.installmentNumber,
+            date = dto.date,
+            value = dto.value
+    )
+  }
 ```
+
 
