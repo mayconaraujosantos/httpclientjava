@@ -1249,3 +1249,413 @@ object TestDataFactory {
 
 ```
 
+```kotlin
+object TestDataFactory {
+
+  // Constantes para IDs
+  const val TEST_LOCK_ID = "test-id-123456789012345678901234"
+  const val TEST_HOLDER_ID = "holder-id-123456789012345678901234"
+  const val TEST_INSTALLMENT_ID = "installment-id-123456789012345678901234"
+  const val TEST_NUCLEA_ID = "nuclea-id-123456789012345678901234"
+  const val TEST_CERC_ID = "cerc-id-123456789012345678901234"
+
+  // Constantes para dados básicos
+  const val TEST_HUB_GUARANTEE_ID = "HUB123"
+  const val TEST_CONTRACT_NUMBER = "CONTRACT123"
+  const val TEST_CONTRACT_SOURCE = "SOURCE"
+  const val TEST_IPOC = "IPOC123"
+  const val TEST_OWNER_PERSON_ID = "OWNER123"
+  const val TEST_TAX_ID = "12345678901"
+  const val TEST_PROTOCOL = "PROTOCOL-001"
+
+  // Constantes para valores
+  val TEST_AMOUNT = BigDecimal("1000.00")
+  val TEST_INSTALLMENT_VALUE = BigDecimal("500.00")
+
+  // Constantes para datas
+  val TEST_START_DATE = LocalDate.now()
+  val TEST_END_DATE = LocalDate.now().plusMonths(12)
+  val TEST_NOW = LocalDateTime.now()
+
+  // Factory methods para CardReceivablesLockEntity
+  fun createCardReceivablesLockEntity(
+          id: String = TEST_LOCK_ID,
+          hubGuaranteeId: String = TEST_HUB_GUARANTEE_ID,
+          contractNumber: String = TEST_CONTRACT_NUMBER,
+          status: CardReceivablesLockStatus = CardReceivablesLockStatus.ACTIVE,
+          register: RegisterType = RegisterType.CERC,
+          nucleaEntry: CardReceivablesLockNucleaEntity? = null,
+          cercEntry: CardReceivablesLockCercEntity? = null
+  ): CardReceivablesLockEntity {
+    return CardReceivablesLockEntity(
+            id = id,
+            hubGuaranteeId = hubGuaranteeId,
+            contractNumber = contractNumber,
+            contractSource = TEST_CONTRACT_SOURCE,
+            ipoc = TEST_IPOC,
+            register = register,
+            ownerPersonId = TEST_OWNER_PERSON_ID,
+            amount = TEST_AMOUNT,
+            recalculationFrequency = RecalculationPeriodIndicator.MONTHLY,
+            considerBalanceOnInsufficiency = true,
+            startDate = TEST_START_DATE,
+            endDate = TEST_END_DATE,
+            status = status,
+            createdAt = TEST_NOW,
+            updatedAt = TEST_NOW,
+            holders = mutableListOf(),
+            contractInstallments = mutableListOf(),
+            nucleaEntry = nucleaEntry,
+            cercEntry = cercEntry
+    )
+  }
+
+  // Factory methods para CardReceivablesLockDto
+  fun createCardReceivablesLockDto(
+          id: String = TEST_LOCK_ID,
+          hubGuaranteeId: String = TEST_HUB_GUARANTEE_ID,
+          contractNumber: String = TEST_CONTRACT_NUMBER,
+          status: CardReceivablesLockStatus = CardReceivablesLockStatus.ACTIVE,
+          register: RegisterType = RegisterType.CERC
+  ): CardReceivablesLockDto {
+    return CardReceivablesLockDto(
+            id = id,
+            hubGuaranteeId = hubGuaranteeId,
+            contractNumber = contractNumber,
+            contractSource = TEST_CONTRACT_SOURCE,
+            ipoc = TEST_IPOC,
+            register = register,
+            ownerPersonId = TEST_OWNER_PERSON_ID,
+            amount = TEST_AMOUNT,
+            recalculationFrequency = RecalculationPeriodIndicator.MONTHLY,
+            considerBalanceOnInsufficiency = true,
+            startDate = TEST_START_DATE,
+            endDate = TEST_END_DATE,
+            status = status,
+            createdAt = TEST_NOW,
+            updatedAt = TEST_NOW,
+            holders = emptyList(),
+            nucleaEntry = null,
+            cercEntry = null,
+            contractInstallments = emptyList()
+    )
+  }
+
+  // Factory methods para CardReceivablesHolderEntity
+  fun createCardReceivablesHolderEntity(
+          id: String = TEST_HOLDER_ID,
+          cardReceivablesLock: CardReceivablesLockEntity? = null
+  ): CardReceivablesHolderEntity {
+    return CardReceivablesHolderEntity(
+            id = id,
+            taxId = TEST_TAX_ID,
+            rootTaxIdOperation = "false",
+            paymentAccountBranch = "0001",
+            paymentAccountNumber = "123456",
+            paymentAccountId = "account-123456789012345678901234",
+            cardReceivablesLock = cardReceivablesLock
+    )
+  }
+
+  // Factory methods para CardReceivablesHolderDto
+  fun createCardReceivablesHolderDto(id: String = TEST_HOLDER_ID): CardReceivablesHolderDto {
+    return CardReceivablesHolderDto(
+            id = id,
+            taxId = TEST_TAX_ID,
+            rootTaxIdOperation = "false",
+            paymentAccountBranch = "0001",
+            paymentAccountNumber = "123456",
+            paymentAccountId = "account-123456789012345678901234"
+    )
+  }
+
+  // Factory methods para CardReceivablesContractInstallmentEntity
+  fun createCardReceivablesContractInstallmentEntity(
+          id: String = TEST_INSTALLMENT_ID,
+          installmentNumber: Int = 1,
+          cardReceivablesLock: CardReceivablesLockEntity? = null
+  ): CardReceivablesContractInstallmentEntity {
+    return CardReceivablesContractInstallmentEntity(
+            id = id,
+            installmentNumber = installmentNumber,
+            date = TEST_START_DATE,
+            value = TEST_INSTALLMENT_VALUE,
+            cardReceivablesLock = cardReceivablesLock
+    )
+  }
+
+  // Factory methods para CardReceivablesContractInstallmentDto
+  fun createCardReceivablesContractInstallmentDto(
+          id: String = TEST_INSTALLMENT_ID,
+          installmentNumber: Int = 1
+  ): CardReceivablesContractInstallmentDto {
+    return CardReceivablesContractInstallmentDto(
+            id = id,
+            installmentNumber = installmentNumber,
+            date = TEST_START_DATE,
+            value = TEST_INSTALLMENT_VALUE
+    )
+  }
+
+  // Factory methods para CardReceivablesLockNucleaEntity
+  fun createCardReceivablesLockNucleaEntity(
+          id: String = TEST_NUCLEA_ID,
+          protocol: String = TEST_PROTOCOL,
+          creationRetryAttempts: Int = 0,
+          proactiveSearchAttempts: Int = 0,
+          cardReceivablesLock: CardReceivablesLockEntity? = null
+  ): CardReceivablesLockNucleaEntity {
+    return CardReceivablesLockNucleaEntity(
+            id = id,
+            protocol = protocol,
+            creationRetryAttempts = creationRetryAttempts,
+            proactiveSearchAttempts = proactiveSearchAttempts,
+            createdAt = TEST_NOW,
+            updatedAt = TEST_NOW,
+            cardReceivablesLock = cardReceivablesLock
+    )
+  }
+
+  // Factory methods para CardReceivablesLockNucleaDto
+  fun createCardReceivablesLockNucleaDto(
+          id: String = TEST_NUCLEA_ID,
+          protocol: String = TEST_PROTOCOL
+  ): CardReceivablesLockNucleaDto {
+    return CardReceivablesLockNucleaDto(
+            id = id,
+            creationRetryAttempts = 0,
+            proactiveSearchAttempts = 0,
+            protocol = protocol
+    )
+  }
+
+  // Factory methods para CardReceivablesLockCercEntity
+  fun createCardReceivablesLockCercEntity(
+          id: String = TEST_CERC_ID,
+          protocol: String = TEST_PROTOCOL,
+          creationRetryAttempts: Int = 0,
+          proactiveSearchAttempts: Int = 0,
+          cardReceivablesLock: CardReceivablesLockEntity? = null
+  ): CardReceivablesLockCercEntity {
+    return CardReceivablesLockCercEntity(
+            id = id,
+            protocol = protocol,
+            creationRetryAttempts = creationRetryAttempts,
+            proactiveSearchAttempts = proactiveSearchAttempts,
+            createdAt = TEST_NOW,
+            updatedAt = TEST_NOW,
+            cardReceivablesLock = cardReceivablesLock
+    )
+  }
+
+  // Factory methods para CardReceivablesLockCercDto
+  fun createCardReceivablesLockCercDto(id: String = TEST_CERC_ID): CardReceivablesLockCercDto {
+    return CardReceivablesLockCercDto(
+            id = id,
+            creationRetryAttempts = 0,
+            proactiveSearchAttempts = 0
+    )
+  }
+
+  // Métodos utilitários para criar entidades com relacionamentos
+  fun createCardReceivablesLockWithNuclea(
+          lockId: String = TEST_LOCK_ID,
+          nucleaId: String = TEST_NUCLEA_ID
+  ): CardReceivablesLockEntity {
+    val nucleaEntity = createCardReceivablesLockNucleaEntity(nucleaId)
+    val lockEntity = createCardReceivablesLockEntity(lockId, register = RegisterType.NUCLEA)
+    lockEntity.assignNucleaEntry(nucleaEntity)
+    return lockEntity
+  }
+
+  fun createCardReceivablesLockWithCerc(
+          lockId: String = TEST_LOCK_ID,
+          cercId: String = TEST_CERC_ID
+  ): CardReceivablesLockEntity {
+    val cercEntity = createCardReceivablesLockCercEntity(cercId)
+    val lockEntity = createCardReceivablesLockEntity(lockId, register = RegisterType.CERC)
+    lockEntity.assignCercEntry(cercEntity)
+    return lockEntity
+  }
+
+  fun createCardReceivablesLockWithHolder(
+          lockId: String = TEST_LOCK_ID,
+          holderId: String = TEST_HOLDER_ID
+  ): CardReceivablesLockEntity {
+    val holderEntity = createCardReceivablesHolderEntity(holderId)
+    val lockEntity = createCardReceivablesLockEntity(lockId)
+    lockEntity.addHolder(holderEntity)
+    return lockEntity
+  }
+
+  fun createCardReceivablesLockWithInstallment(
+          lockId: String = TEST_LOCK_ID,
+          installmentId: String = TEST_INSTALLMENT_ID
+  ): CardReceivablesLockEntity {
+    val installmentEntity = createCardReceivablesContractInstallmentEntity(installmentId)
+    val lockEntity = createCardReceivablesLockEntity(lockId)
+    lockEntity.addContractInstallment(installmentEntity)
+    return lockEntity
+  }
+}
+
+```
+
+```kotlin
+
+data class CardReceivablesLockDto(
+        val id: String,
+        val hubGuaranteeId: String,
+        val contractNumber: String,
+        val contractSource: String,
+        val ipoc: String,
+        val register: RegisterType,
+        val ownerPersonId: String,
+        val amount: BigDecimal,
+        val recalculationFrequency: RecalculationPeriodIndicator,
+        val considerBalanceOnInsufficiency: Boolean,
+        val startDate: LocalDate,
+        val endDate: LocalDate,
+        val status: CardReceivablesLockStatus,
+        val createdAt: LocalDateTime,
+        val updatedAt: LocalDateTime,
+        val holders: List<CardReceivablesHolderDto>,
+        val nucleaEntry: CardReceivablesLockNucleaDto?,
+        val cercEntry: CardReceivablesLockCercDto?,
+        val contractInstallments: List<CardReceivablesContractInstallmentDto>
+)
+
+```
+
+```kotlin
+
+object CardReceivablesLockMapper {
+
+  fun map(entity: CardReceivablesLockEntity): CardReceivablesLockDto {
+    return CardReceivablesLockDto(
+            id = entity.id,
+            hubGuaranteeId = entity.hubGuaranteeId,
+            contractNumber = entity.contractNumber,
+            contractSource = entity.contractSource,
+            ipoc = entity.ipoc,
+            register = entity.register,
+            ownerPersonId = entity.ownerPersonId,
+            amount = entity.amount,
+            recalculationFrequency = entity.recalculationFrequency,
+            considerBalanceOnInsufficiency = entity.considerBalanceOnInsufficiency,
+            startDate = entity.startDate,
+            endDate = entity.endDate,
+            status = entity.status,
+            createdAt = entity.createdAt,
+            updatedAt = entity.updatedAt,
+            holders = entity.holders.map { CardReceivablesHolderMapper.map(it) },
+            nucleaEntry = entity.nucleaEntry?.let { CardReceivablesLockNucleaMapper.map(it) },
+            cercEntry = entity.cercEntry?.let { CardReceivablesLockCercMapper.map(it) },
+            contractInstallments =
+                    entity.contractInstallments.map {
+                      CardReceivablesContractInstallmentMapper.map(it)
+                    }
+    )
+  }
+
+  fun map(dto: CardReceivablesLockDto): CardReceivablesLockEntity {
+    return CardReceivablesLockEntity(
+            id = dto.id,
+            hubGuaranteeId = dto.hubGuaranteeId,
+            contractNumber = dto.contractNumber,
+            contractSource = dto.contractSource,
+            ipoc = dto.ipoc,
+            register = dto.register,
+            ownerPersonId = dto.ownerPersonId,
+            amount = dto.amount,
+            recalculationFrequency = dto.recalculationFrequency,
+            considerBalanceOnInsufficiency = dto.considerBalanceOnInsufficiency,
+            startDate = dto.startDate,
+            endDate = dto.endDate,
+            status = dto.status,
+            createdAt = dto.createdAt,
+            updatedAt = dto.updatedAt,
+            holders = dto.holders.map { CardReceivablesHolderMapper.map(it) }.toMutableList(),
+            nucleaEntry = dto.nucleaEntry?.let { CardReceivablesLockNucleaMapper.map(it) },
+            cercEntry = dto.cercEntry?.let { CardReceivablesLockCercMapper.map(it) },
+            contractInstallments =
+                    dto.contractInstallments
+                            .map { CardReceivablesContractInstallmentMapper.map(it) }
+                            .toMutableList()
+    )
+  }
+object CardReceivablesHolderMapper {
+
+  fun map(entity: CardReceivablesHolderEntity): CardReceivablesHolderDto {
+    return CardReceivablesHolderDto(
+            id = entity.id,
+            taxId = entity.taxId,
+            rootTaxIdOperation = entity.rootTaxIdOperation,
+            paymentAccountBranch = entity.paymentAccountBranch,
+            paymentAccountNumber = entity.paymentAccountNumber,
+            paymentAccountId = entity.paymentAccountId
+    )
+  }
+
+  fun map(dto: CardReceivablesHolderDto): CardReceivablesHolderEntity {
+    return CardReceivablesHolderEntity(
+            id = dto.id,
+            cardReceivablesLock = null,
+            taxId = dto.taxId,
+            rootTaxIdOperation = dto.rootTaxIdOperation,
+            paymentAccountBranch = dto.paymentAccountBranch,
+            paymentAccountNumber = dto.paymentAccountNumber,
+            paymentAccountId = dto.paymentAccountId
+    )
+  }
+}
+
+object CardReceivablesLockNucleaMapper {
+
+  fun map(entity: CardReceivablesLockNucleaEntity): CardReceivablesLockNucleaDto {
+    return CardReceivablesLockNucleaDto(
+            id = entity.id,
+            creationRetryAttempts = entity.creationRetryAttempts,
+            proactiveSearchAttempts = entity.proactiveSearchAttempts,
+            protocol = entity.protocol
+    )
+  }
+
+  fun map(dto: CardReceivablesLockNucleaDto): CardReceivablesLockNucleaEntity {
+    return CardReceivablesLockNucleaEntity(
+            id = dto.id,
+            cardReceivablesLock = null,
+            protocol = dto.protocol,
+            creationRetryAttempts = dto.creationRetryAttempts,
+            proactiveSearchAttempts = dto.proactiveSearchAttempts,
+            createdAt = java.time.LocalDateTime.now(),
+            updatedAt = java.time.LocalDateTime.now()
+    )
+  }
+}
+
+object CardReceivablesLockCercMapper {
+
+  fun map(entity: CardReceivablesLockCercEntity): CardReceivablesLockCercDto {
+    return CardReceivablesLockCercDto(
+            id = entity.id,
+            creationRetryAttempts = entity.creationRetryAttempts,
+            proactiveSearchAttempts = entity.proactiveSearchAttempts
+    )
+  }
+
+  fun map(dto: CardReceivablesLockCercDto): CardReceivablesLockCercEntity {
+    return CardReceivablesLockCercEntity(
+            id = dto.id,
+            cardReceivablesLock = null,
+            protocol = null,
+            creationRetryAttempts = dto.creationRetryAttempts,
+            proactiveSearchAttempts = dto.proactiveSearchAttempts,
+            createdAt = java.time.LocalDateTime.now(),
+            updatedAt = java.time.LocalDateTime.now()
+    )
+  }
+}
+
+```
+
